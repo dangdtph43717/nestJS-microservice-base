@@ -20,15 +20,32 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "typeorm:cli": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli",
+    "typeorm:cli:ds": "npm run typeorm:cli -- -d src/database/config.typeorm.ts",
+    "migration:generate": "npm run typeorm:cli:ds -- migration:generate src/database/migrations/auto-generated",
+    "migration:create": "npm run typeorm:cli -- migration:create",
+    "migration:run": "npm run typeorm:cli:ds -- migration:run",
+    "migration:revert": "npm run typeorm:cli:ds -- migration:revert",
+    "db:refresh": "npm run typeorm:cli:ds schema:drop && npm run migration:run && npm run seed:run"
   },
   "dependencies": {
     "@nestjs/common": "^9.0.0",
+    "@nestjs/config": "^2.2.0",
     "@nestjs/core": "^9.0.0",
+    "@nestjs/microservices": "^9.0.11",
     "@nestjs/platform-express": "^9.0.0",
+    "@nestjs/typeorm": "^9.0.1",
+    "amqp-connection-manager": "^4.1.6",
+    "amqplib": "^0.10.3",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.13.2",
+    "js-yaml": "^4.1.0",
+    "pg": "^8.8.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
-    "rxjs": "^7.2.0"
+    "rxjs": "^7.2.0",
+    "typeorm": "^0.3.9"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.1.2",
@@ -38,6 +55,7 @@
     "@nestjs/testing": "^9.0.0",
     "@types/express": "^4.17.13",
     "@types/jest": "28.1.4",
+    "@types/js-yaml": "^4.0.5",
     "@types/node": "^16.0.0",
     "@types/supertest": "^2.0.11",
     "@typescript-eslint/eslint-plugin": "^5.0.0",

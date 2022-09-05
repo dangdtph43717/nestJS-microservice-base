@@ -1,0 +1,22 @@
+app_env: 'local'
+port: 3005
+
+database:
+  type: 'postgres'
+  host: 'localhost'
+  port: '5432'
+  username: 'postgres'
+  password: 'Supersecret123'
+  db_name: 'dbtest'
+
+microservice:
+  uris:
+    - 'amqp://localhost:5672'
+  queue: 'app_queue'
+  auto_ack: true
+
+clients:
+  demo_service:
+    uris:
+      - 'amqp://localhost:5672'
+    queue: 'demo_app_queue'
