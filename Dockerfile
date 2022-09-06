@@ -10,7 +10,7 @@ COPY --chown=node:node package*.json ./
 
 RUN npm ci
 
-COPY --chown=node:node . .
+RUN npm install -g @nestjs/cli
 
 USER node
 

@@ -1,5 +1,5 @@
 app_env: 'local'
-port: 3005
+port: 3000
 
 database:
   type: 'postgres'
