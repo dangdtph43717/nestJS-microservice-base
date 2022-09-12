@@ -1,3 +1,4 @@
+import { AuthModule } from '@modules/auth/auth.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -9,6 +10,7 @@ import { typeOrmConfig } from './config/typeorm.config';
 
 @Module({
   imports: [
+    AuthModule,
     ConfigModule.forRoot({
       load: [configuration],
     }),

@@ -14,6 +14,12 @@ microservice:
     - 'amqp://localhost:5672'
   queue: 'app_queue'
   auto_ack: true
+  multiline:
+
+auth:
+  userPoolId: ap-southeast-1_z1Sv7uZjk
+  clientId: 72ne78n24vv61o0416j7qanbt3
+  region: ap-southeast-1
 
 clients:
   demo_service:
