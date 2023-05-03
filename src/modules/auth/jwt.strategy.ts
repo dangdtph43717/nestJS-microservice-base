@@ -1,17 +1,24 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Inject, Injectable } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
 import { passportJwtSecret } from 'jwks-rsa';
-import { AuthConfig, Config } from '@config/types';
-
-import { User } from './types/user';
+import { RolePermissions, User } from '@packages/authorization';
+import { firstValueFrom, lastValueFrom } from 'rxjs';
+import { AUTHORIZATION_SERVICE } from 'src/clients';
+import { ClientProxy } from '@nestjs/microservices';
+import { QueueResult } from '@packages/modules/common/classes/queue-result';
+import { UserType } from './constants/auth.constant';
+import authConfiguration from '@config/types/auth.config';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly configService: ConfigService<Config, true>) {
-    const authConfig = configService.get<AuthConfig>('auth');
-
+  constructor(
+    @Inject(authConfiguration.KEY)
+    private authConfig: ConfigType<typeof authConfiguration>,
+    @Inject(AUTHORIZATION_SERVICE)
+    private readonly authorizationService: ClientProxy,
+  ) {
     const authority = `https://cognito-idp.${authConfig.region}.amazonaws.com/${authConfig.userPoolId}`;
     super({
       secretOrKeyProvider: passportJwtSecret({
@@ -27,6 +34,31 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any): Promise<User> {
-    return { userId: payload.sub, username: payload.username };
+    const userId = payload.sub;
+    const resp = await firstValueFrom(
+      this.authorizationService.send<QueueResult<RolePermissions>>(
+        'get-role-permissions',
+        {
+          target: 'current',
+          userId,
+          onlyGetRolePermissions: true,
+        },
+      ),
+    );
+    const userResponse = await lastValueFrom<QueueResult<User | null>>(
+      this.authorizationService.send('get-user-by-id', {
+        userId,
+      }),
+    );
+    const { roles, permissions } = resp.data || {};
+
+    return {
+      userId,
+      username: payload.username,
+      roles,
+      permissions,
+      customerId: userResponse.data?.customerId || '',
+      type: userResponse.data?.type || UserType.RAK,
+    };
   }
 }

@@ -1,19 +1,10 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
-import { AppService } from './app.service';
-import { JwtAuthGuard, CurrentUser, User } from '@modules/auth';
-
+import { Controller, Get } from '@nestjs/common';
+import { Public } from '@packages/authorization';
 @Controller('/')
 export class AppController {
-  constructor(private readonly appService: AppService) {}
-
-  @Get('/')
-  getHello(): string {
-    return this.appService.getHello();
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('/private')
-  getPrivate(@CurrentUser() user: User): string {
-    return 'Hello from private route';
+  @Get()
+  @Public()
+  getIndex() {
+    return { name: 'Base Service', status: 'ok' };
   }
 }

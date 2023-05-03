@@ -1,21 +1,28 @@
-import { readFileSync } from 'fs';
-import * as yaml from 'js-yaml';
-import { join } from 'path';
-import { Config } from './types';
+import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
-import { plainToInstance } from 'class-transformer';
+import { ConfigObject, registerAs } from '@nestjs/config';
 
-export default (): Config => {
-  const config = plainToInstance(
-    Config,
-    yaml.load(readFileSync(join(__dirname, 'config.yaml'), 'utf8')),
-    { enableImplicitConversion: true },
-  );
+export const registerAsWithValidation = <
+  T extends ConfigObject,
+  E extends ClassConstructor<unknown>,
+>(
+  token: string,
+  envClass: E,
+  rawConfig: Record<string, unknown>,
+  mapValue: (envInstance: InstanceType<E>) => T,
+) =>
+  registerAs(token, (): T => {
+    const validatedConfig = plainToInstance(envClass, rawConfig, {
+      enableImplicitConversion: true,
+      excludeExtraneousValues: true,
+    });
+    const errors = validateSync(validatedConfig as object, {
+      skipMissingProperties: false,
+    });
 
-  const errors = validateSync(config, { skipMissingProperties: false });
-  if (errors.length > 0) {
-    throw new Error(errors.toString());
-  }
+    if (errors.length > 0) {
+      throw new Error(errors.toString());
+    }
 
-  return config;
-};
+    return mapValue(validatedConfig as InstanceType<E>);
+  });

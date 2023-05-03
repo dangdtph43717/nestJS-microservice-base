@@ -1,27 +1,22 @@
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigType } from '@nestjs/config';
 import {
   TypeOrmModuleAsyncOptions,
   TypeOrmModuleOptions,
 } from '@nestjs/typeorm';
 import { DataSourceOptions } from 'typeorm';
-import { Config } from './types';
-import { DatabaseConfig } from './types/database';
+import databaseConfiguration from '@config/types/database.config';
 
 export const typeOrmConfig: TypeOrmModuleAsyncOptions = {
-  imports: [ConfigModule],
-  inject: [ConfigService],
   useFactory: async (
-    configService: ConfigService<Config, true>,
+    databaseConfig: ConfigType<typeof databaseConfiguration>,
   ): Promise<TypeOrmModuleOptions> => {
-    const database = configService.get<DatabaseConfig>('database');
-
     return {
-      type: database.type,
-      host: database.host,
-      port: parseInt(database.port, 10),
-      username: database.username,
-      database: database.dbName,
-      password: database.password,
+      type: databaseConfig.type,
+      host: databaseConfig.host,
+      port: parseInt(databaseConfig.port, 10),
+      username: databaseConfig.username,
+      database: databaseConfig.dbName,
+      password: databaseConfig.password,
       entities: [__dirname + '/../**/*.entity.{js,ts}'],
       migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
       extra: {
@@ -31,4 +26,6 @@ export const typeOrmConfig: TypeOrmModuleAsyncOptions = {
       logging: true,
     } as DataSourceOptions;
   },
+  imports: [ConfigModule.forFeature(databaseConfiguration)],
+  inject: [databaseConfiguration.KEY],
 };

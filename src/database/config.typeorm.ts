@@ -1,17 +1,21 @@
 import 'reflect-metadata';
-import configuration from '../config/configuration';
-import { DataSource } from 'typeorm';
-import { DataSourceOptions } from 'typeorm';
+import { DataSource, DataSourceOptions } from 'typeorm';
+import { ConfigType } from '@nestjs/config';
+import databaseConfiguration from '@config/types/database.config';
+import * as dotenv from 'dotenv';
 
-const { database } = configuration();
+dotenv.config();
+
+const databaseConfig: ConfigType<typeof databaseConfiguration> =
+  databaseConfiguration();
 
 export const AppDataSource = new DataSource({
-  type: database.type,
-  host: database.host,
-  port: parseInt(database.port, 10),
-  username: database.username,
-  database: database.dbName,
-  password: database.password,
+  type: databaseConfig.type,
+  host: databaseConfig.host,
+  port: parseInt(databaseConfig.port, 10),
+  username: databaseConfig.username,
+  database: databaseConfig.dbName,
+  password: databaseConfig.password,
   entities: [__dirname + '/../**/*.entity.{js,ts}'],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   cli: {

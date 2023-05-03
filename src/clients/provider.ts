@@ -1,31 +1,54 @@
 import { FactoryProvider } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ConfigType } from '@nestjs/config';
 import { ClientProxyFactory, Transport } from '@nestjs/microservices';
-import { Config } from 'src/config/types';
-import { DEMO_SERVICE } from './constants';
-import { ClientOption } from './types';
+import microserviceConfiguration from '@config/types/microservice.config';
+import { AUTHORIZATION_SERVICE, CORE_SERVICE } from './constants';
 
 export const clientProviders: FactoryProvider[] = [
   {
-    provide: DEMO_SERVICE,
-    useFactory: (configService: ConfigService<Config, true>) => {
-      const clients = configService.get<Map<string, ClientOption>>('clients');
-      const options = clients.get('demo_service');
-      if (!options) {
+    provide: AUTHORIZATION_SERVICE,
+    useFactory: (
+      microserviceConfig: ConfigType<typeof microserviceConfiguration>,
+    ) => {
+      const { authorizationService: config } = microserviceConfig.clients;
+      if (!config) {
         return null;
       }
 
       return ClientProxyFactory.create({
         transport: Transport.RMQ,
         options: {
-          urls: options.uris,
-          queue: options.queue,
+          urls: config.urls,
+          queue: config.queue,
           queueOptions: {
             durable: false,
           },
         },
       });
     },
-    inject: [ConfigService],
+    inject: [microserviceConfiguration.KEY],
+  },
+  {
+    provide: CORE_SERVICE,
+    useFactory: (
+      microserviceConfig: ConfigType<typeof microserviceConfiguration>,
+    ) => {
+      const { coreService: config } = microserviceConfig.clients;
+      if (!config) {
+        return null;
+      }
+
+      return ClientProxyFactory.create({
+        transport: Transport.RMQ,
+        options: {
+          urls: config.urls,
+          queue: config.queue,
+          queueOptions: {
+            durable: false,
+          },
+        },
+      });
+    },
+    inject: [microserviceConfiguration.KEY],
   },
 ];
