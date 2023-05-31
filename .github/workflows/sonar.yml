@@ -1,0 +1,32 @@
+name: sonar
+on:
+  pull_request:
+    branches:
+      - main
+      - release/**
+jobs:
+  sonarcloud:
+    name: sonarcloud
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      # Setup nodeJS
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'v19.4.0'
+      # Run dependency
+      - name: Install dependencies
+        run: yarn install
+      # Run test
+      - name: Test
+        run: yarn test:cov
+      # Scan with sonarcloud
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
